@@ -1,0 +1,385 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>逐字稿上傳 | 會議記錄服務</title>
+<script src="https://static.line-scdn.net/liff/edge/2/sdk.js"></script>
+<style>
+:root{--navy:#1e1b4b;--purple:#7c3aed;--purple-light:#ede9fe;--purple-mid:#c4b5fd;--blue:#2563eb;--blue-light:#dbeafe;--text:#0f172a;--text-2:#475569;--text-3:#94a3b8;--surface:#fff;--surface-2:#f8fafc;--surface-3:#f1f5f9;--border:#e2e8f0;--success:#059669;--success-light:#d1fae5;--error:#dc2626;--error-light:#fee2e2;--radius:12px;--radius-sm:8px;--shadow:0 1px 3px rgba(0,0,0,.08)}
+*{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
+body{font-family:-apple-system,'PingFang TC','Microsoft JhengHei',sans-serif;background:var(--surface-2);color:var(--text);min-height:100vh}
+.header{background:linear-gradient(135deg,#1e1b4b 0%,#312e81 100%);padding:20px 20px 24px;position:relative;overflow:hidden}
+.header::before{content:'';position:absolute;top:-40px;right:-20px;width:130px;height:130px;border-radius:50%;background:rgba(139,92,246,.2)}
+.header::after{content:'';position:absolute;bottom:-30px;left:60px;width:90px;height:90px;border-radius:50%;background:rgba(99,102,241,.25)}
+.hbadge{display:inline-flex;align-items:center;gap:6px;background:rgba(196,181,253,.2);border:1px solid rgba(196,181,253,.4);color:#c4b5fd;font-size:11px;font-weight:600;letter-spacing:.08em;padding:4px 10px;border-radius:20px;margin-bottom:10px;position:relative;z-index:1}
+.hbadge::before{content:'';width:6px;height:6px;background:#c4b5fd;border-radius:50%}
+.htitle{font-size:22px;font-weight:700;color:#fff;line-height:1.3;position:relative;z-index:1}
+.hsub{font-size:13px;color:rgba(255,255,255,.5);margin-top:4px;position:relative;z-index:1}
+.user-bar{margin:16px 16px 0;background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:12px 14px;display:flex;align-items:center;gap:10px;box-shadow:var(--shadow)}
+.uav{width:36px;height:36px;border-radius:50%;background:var(--purple-light);display:flex;align-items:center;justify-content:center;font-size:14px;font-weight:700;color:var(--purple);flex-shrink:0;overflow:hidden}
+.uav img{width:100%;height:100%;object-fit:cover}
+.uinfo{flex:1;min-width:0}
+.uname{font-size:14px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.umeta{font-size:11px;color:var(--text-3);margin-top:1px}
+.ustatus{display:flex;align-items:center;gap:4px;font-size:11px;font-weight:600;color:var(--success)}
+.ustatus::before{content:'';width:6px;height:6px;background:var(--success);border-radius:50%}
+.content{padding:16px;padding-bottom:130px}
+.card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:16px;margin-bottom:12px;box-shadow:var(--shadow)}
+.ch{display:flex;align-items:center;gap:8px;margin-bottom:14px}
+.cicon{width:32px;height:32px;border-radius:var(--radius-sm);display:flex;align-items:center;justify-content:center;font-size:16px;flex-shrink:0}
+.ci-purple{background:var(--purple-light)}.ci-blue{background:var(--blue-light)}.ci-slate{background:var(--surface-3)}.ci-green{background:var(--success-light)}
+.ctitle{font-size:14px;font-weight:700}
+.csub{font-size:11px;color:var(--text-3);margin-top:1px}
+.rbadge{margin-left:auto;font-size:10px;font-weight:600;color:var(--error);background:var(--error-light);padding:2px 6px;border-radius:4px}
+.obadge{margin-left:auto;font-size:10px;font-weight:600;color:var(--text-3);background:var(--surface-3);padding:2px 6px;border-radius:4px}
+
+/* Input tabs */
+.itabs{display:flex;background:var(--surface-3);border-radius:var(--radius-sm);padding:3px;margin-bottom:14px;gap:3px}
+.itab{flex:1;padding:8px;text-align:center;font-size:12px;font-weight:600;border-radius:7px;cursor:pointer;transition:all .2s;border:none;font-family:inherit;background:transparent;color:var(--text-3)}
+.itab.on{background:#fff;color:var(--purple);box-shadow:var(--shadow)}
+
+.upload-zone{border:2px dashed var(--border);border-radius:var(--radius);padding:24px 16px;text-align:center;cursor:pointer;transition:all .2s;position:relative;overflow:hidden;background:var(--surface-2)}
+.upload-zone:active,.upload-zone.drag-over{border-color:var(--purple);background:var(--purple-light)}
+.upload-zone.has-file{border-color:var(--success);background:var(--success-light);border-style:solid}
+.upload-zone input{position:absolute;inset:0;opacity:0;cursor:pointer;width:100%;height:100%}
+.uico{font-size:32px;margin-bottom:8px;display:block}
+.umain{font-size:14px;font-weight:600;margin-bottom:4px}
+.usubtext{font-size:12px;color:var(--text-3)}
+.ftags{display:flex;gap:6px;justify-content:center;flex-wrap:wrap;margin-top:10px}
+.ftag{font-size:10px;font-weight:600;padding:3px 8px;border-radius:4px;background:var(--surface-3);color:var(--text-2);border:1px solid var(--border)}
+.finfo{display:flex;align-items:center;gap:10px;padding:10px 12px;background:var(--success-light);border:1px solid #6ee7b7;border-radius:var(--radius-sm);margin-top:10px}
+.fname{font-size:13px;font-weight:600;color:#065f46;word-break:break-all}
+.fsize{font-size:11px;color:#059669}
+.fremove{margin-left:auto;width:24px;height:24px;border-radius:50%;background:rgba(5,150,105,.2);border:none;cursor:pointer;display:flex;align-items:center;justify-content:center;color:#065f46;font-size:14px;flex-shrink:0}
+.paste-hdr{display:flex;align-items:center;justify-content:space-between;margin-bottom:6px}
+.paste-lbl{font-size:13px;font-weight:600}
+.paste-clr{font-size:11px;color:var(--purple);background:none;border:none;cursor:pointer;font-family:inherit;padding:2px 6px}
+.wcbar{display:flex;align-items:center;justify-content:space-between;margin-top:6px}
+.wc{font-size:11px;color:var(--text-3)}
+.wc strong{color:var(--purple)}
+.field{margin-bottom:12px}.field:last-child{margin-bottom:0}
+.lbl{display:flex;align-items:center;gap:6px;font-size:13px;font-weight:600;margin-bottom:6px}
+.ldot{width:5px;height:5px;border-radius:50%;background:var(--purple);flex-shrink:0}
+.row2{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+input[type=text],input[type=date],textarea{width:100%;font-family:inherit;font-size:14px;color:var(--text);background:var(--surface-2);border:1px solid var(--border);border-radius:var(--radius-sm);padding:10px 12px;outline:none;transition:border-color .2s,box-shadow .2s;resize:none;-webkit-appearance:none;appearance:none}
+input[type=text]:focus,input[type=date]:focus,textarea:focus{border-color:var(--purple);background:var(--surface);box-shadow:0 0 0 3px rgba(124,58,237,.08)}
+textarea{min-height:80px;line-height:1.6}
+textarea.tall{min-height:110px}
+textarea.xl{min-height:160px}
+input[type=date]{color-scheme:light}
+
+/* Template */
+.tpl-group{display:flex;flex-direction:column;gap:8px;margin-bottom:8px}
+.tpl-opt{display:flex;align-items:flex-start;gap:10px;padding:12px;border:1.5px solid var(--border);border-radius:var(--radius-sm);cursor:pointer;transition:all .2s;background:var(--surface)}
+.tpl-opt.sel-ab{border-color:var(--purple);background:var(--purple-light)}
+.tpl-opt.sel-c{border-color:var(--blue);background:var(--blue-light)}
+.trad{width:18px;height:18px;border-radius:50%;border:2px solid var(--border);display:flex;align-items:center;justify-content:center;flex-shrink:0;margin-top:1px}
+.tpl-opt.sel-ab .trad{border-color:var(--purple)}
+.tpl-opt.sel-c .trad{border-color:var(--blue)}
+.trdot{width:8px;height:8px;border-radius:50%;display:none}
+.tpl-opt.sel-ab .trdot{display:block;background:var(--purple)}
+.tpl-opt.sel-c .trdot{display:block;background:var(--blue)}
+.tname{font-size:13px;font-weight:700}
+.tdesc{font-size:11px;color:var(--text-3);margin-top:2px;line-height:1.4}
+.tpl-prev{background:#1e1b4b;border-radius:var(--radius-sm);padding:14px;font-family:'Courier New',monospace;font-size:11px;line-height:1.9;color:#e2e8f0;margin:4px 0 8px;max-height:220px;overflow-y:auto;display:none}
+.tpl-prev.open{display:block}
+.tp-l1{color:#c4b5fd;font-weight:700}.tp-l2{color:#ddd6fe;font-weight:700;padding-left:1em}.tp-l3{color:#e9d5ff;padding-left:2em}.tp-hint{color:rgba(255,255,255,.3);font-size:10px}
+.cust-area{display:none;margin-top:8px}.cust-area.open{display:block}
+.secdiv{display:flex;align-items:center;gap:8px;margin:4px 0 10px}
+.sdline{flex:1;height:1px;background:var(--border)}
+.sdtext{font-size:11px;color:var(--text-3);font-weight:500;white-space:nowrap}
+.ctr{text-align:right;font-size:10px;color:var(--text-3);margin-top:4px}
+.ctr.warn{color:var(--error)}
+.submit-bar{position:fixed;bottom:0;left:0;right:0;background:var(--surface);border-top:1px solid var(--border);padding:12px 16px;padding-bottom:max(12px,env(safe-area-inset-bottom));box-shadow:0 -4px 16px rgba(0,0,0,.06);z-index:100}
+.shint{font-size:11px;color:var(--text-3);text-align:center;margin-bottom:8px}
+.sbtn{width:100%;padding:14px;background:#312e81;color:#fff;border:none;border-radius:var(--radius);font-size:15px;font-weight:700;font-family:inherit;cursor:pointer;transition:all .2s;display:flex;align-items:center;justify-content:center;gap:8px}
+.sbtn:active{transform:scale(.98)}.sbtn:disabled{background:var(--surface-3);color:var(--text-3);cursor:not-allowed;transform:none}
+.overlay{position:fixed;inset:0;background:rgba(30,27,75,.88);display:flex;flex-direction:column;align-items:center;justify-content:center;z-index:999;opacity:0;pointer-events:none;transition:opacity .3s}
+.overlay.show{opacity:1;pointer-events:all}
+.spinner{width:48px;height:48px;border:3px solid rgba(255,255,255,.15);border-top-color:#c4b5fd;border-radius:50%;animation:spin .8s linear infinite;margin-bottom:16px}
+@keyframes spin{to{transform:rotate(360deg)}}
+.ovtxt{font-size:16px;color:#fff;font-weight:600}.ovsub{font-size:12px;color:rgba(255,255,255,.5);margin-top:6px}
+.toast{position:fixed;top:16px;left:16px;right:16px;padding:12px 14px;border-radius:var(--radius);font-size:13px;font-weight:600;z-index:1000;transform:translateY(-80px);transition:transform .3s cubic-bezier(.34,1.56,.64,1);display:flex;align-items:center;gap:8px}
+.toast.show{transform:translateY(0)}.toast.error{background:var(--error);color:#fff}.toast.success{background:var(--success);color:#fff}
+.hidden{display:none!important}
+</style>
+</head>
+<body>
+<div class="overlay" id="overlay"><div class="spinner"></div><div class="ovtxt">正在提交...</div><div class="ovsub">請稍候，勿關閉頁面</div></div>
+<div class="toast" id="toast"></div>
+
+<div class="header">
+  <div class="hbadge">📝 TRANSCRIPT</div>
+  <div class="htitle">逐字稿 → 會議記錄</div>
+  <div class="hsub">上傳逐字稿，產出對話紀錄與正式會議記錄</div>
+</div>
+
+<div class="user-bar">
+  <div class="uav" id="uav">─</div>
+  <div class="uinfo">
+    <div class="uname" id="uname">載入中...</div>
+    <div class="umeta" id="umeta">正在取得身份資訊</div>
+  </div>
+  <div class="ustatus">已綁定</div>
+</div>
+
+<div class="content">
+
+  <!-- ① 逐字稿輸入 -->
+  <div class="card">
+    <div class="ch"><div class="cicon ci-purple">📝</div><div><div class="ctitle">逐字稿內容</div><div class="csub">上傳檔案或直接貼上文字</div></div><span class="rbadge">必填</span></div>
+
+    <div class="itabs">
+      <button class="itab on" id="tab-file" onclick="switchTab('file')">📂 上傳檔案</button>
+      <button class="itab" id="tab-text" onclick="switchTab('text')">📋 貼上文字</button>
+    </div>
+
+    <div id="panel-file">
+      <div class="upload-zone" id="upZone">
+        <input type="file" id="tsFile" accept=".txt,.docx,.doc,.pdf" />
+        <span class="uico">📄</span>
+        <div class="umain">點擊選擇或拖曳逐字稿</div>
+        <div class="usubtext">支援 TXT / DOCX / PDF</div>
+        <div class="ftags"><span class="ftag">TXT</span><span class="ftag">DOCX</span><span class="ftag">DOC</span><span class="ftag">PDF</span></div>
+      </div>
+      <div class="finfo" id="finfo" style="display:none">
+        <span style="font-size:22px">📄</span>
+        <div><div class="fname" id="fname"></div><div class="fsize" id="fsize"></div></div>
+        <button class="fremove" onclick="removeFile()">✕</button>
+      </div>
+    </div>
+
+    <div id="panel-text" class="hidden">
+      <div class="paste-hdr">
+        <span class="paste-lbl">貼上逐字稿內容</span>
+        <button class="paste-clr" onclick="clearText()">清除</button>
+      </div>
+      <textarea id="tsText" class="xl" placeholder="請在此貼上完整逐字稿...&#10;&#10;例：&#10;主席：今天主要討論第三季業務規劃...&#10;與會者甲：關於北區的部分，我們建議...&#10;與會者乙：我認為可以搭配數位行銷..." oninput="updateWC()"></textarea>
+      <div class="wcbar">
+        <span class="wc">字數：<strong id="wc">0</strong></span>
+        <span class="wc" id="wcEst"></span>
+      </div>
+    </div>
+  </div>
+
+  <!-- ② 會議背景 -->
+  <div class="card">
+    <div class="ch"><div class="cicon ci-blue">📋</div><div><div class="ctitle">會議背景</div><div class="csub">協助 AI 掌握會議基本資訊</div></div><span class="obadge">選填</span></div>
+
+    <div class="field">
+      <div class="lbl"><span class="ldot"></span>會議名稱</div>
+      <input type="text" id="meetingName" placeholder="例：AI需求共創月會 2025年第3次" maxlength="100" />
+    </div>
+    <div class="field row2">
+      <div>
+        <div class="lbl"><span class="ldot"></span>會議日期</div>
+        <input type="date" id="meetingDate" />
+      </div>
+      <div>
+        <div class="lbl"><span class="ldot"></span>會議地點</div>
+        <input type="text" id="meetingLocation" placeholder="線上 / 1樓會議室" maxlength="60" />
+      </div>
+    </div>
+    <div class="field">
+      <div class="lbl"><span class="ldot"></span>背景說明</div>
+      <textarea id="background" class="tall" placeholder="例：本次月會討論2025年Q2 AI提案進度..." maxlength="500" oninput="cnt('background','bgC',500)"></textarea>
+      <div class="ctr" id="bgC">0 / 500</div>
+    </div>
+    <div class="field">
+      <div class="lbl"><span class="ldot"></span>與會者</div>
+      <textarea id="attendees" class="tall" placeholder="例：&#10;・資訊部：王主任（主持）、李副理&#10;・業務部：張專員&#10;紀錄：林小姐" maxlength="400" oninput="cnt('attendees','attC',400)"></textarea>
+      <div class="ctr" id="attC">0 / 400</div>
+    </div>
+  </div>
+
+  <!-- ③ 架構模板 -->
+  <div class="card">
+    <div class="ch"><div class="cicon ci-slate">🗂</div><div><div class="ctitle">會議記錄架構</div><div class="csub">選擇適合的章節模板</div></div><span class="obadge">選填</span></div>
+
+    <div class="tpl-group">
+      <div class="tpl-opt" id="optA" onclick="selTpl('A')">
+        <div class="trad"><div class="trdot"></div></div>
+        <div><div class="tname">A｜月會（報告型）</div><div class="tdesc">AI需求共創月會．表頭文字區塊．壹至陸六層架構</div></div>
+      </div>
+      <div class="tpl-prev" id="prevA">
+        <div class="tp-hint">── 表頭：文字區塊 ──</div>
+        <div>會議名稱 / 時間 / 地點 / 主席 / 紀錄 / 與會人員</div><br>
+        <div class="tp-l1">壹、會議目的</div>
+        <div class="tp-l1">貳、全行AI提案總覽</div>
+        <div class="tp-l1">參、AI需求共創專案執行情況</div>
+        <div class="tp-l2">一、進行中專案數量</div>
+        <div class="tp-l2">二、各專案狀態摘要</div>
+        <div class="tp-l1">肆、案例分享（若有）</div>
+        <div class="tp-l1">伍、討論及決議事項</div>
+        <div class="tp-l1">陸、追蹤事項</div>
+      </div>
+
+      <div class="tpl-opt" id="optB" onclick="selTpl('B')">
+        <div class="trad"><div class="trdot"></div></div>
+        <div><div class="tname">B｜座談會（專案型）</div><div class="tdesc">AI需求共創座談會．表頭框線表格．壹至肆架構</div></div>
+      </div>
+      <div class="tpl-prev" id="prevB">
+        <div class="tp-hint">── 表頭：框線表格 ──</div>
+        <div>| 會議編號 / 時間 / 地點 / 與會人員 / 紀錄 |</div><br>
+        <div class="tp-l1">壹、會議目的</div>
+        <div class="tp-l1">貳、討論事項</div>
+        <div class="tp-l2">一、現行業務流程</div>
+        <div class="tp-l3">（一）流程 （二）痛點</div>
+        <div class="tp-l2">二、解決方案討論</div>
+        <div class="tp-l2">三、其他議題</div>
+        <div class="tp-l1">參、決議事項</div>
+        <div class="tp-l1">肆、追蹤事項</div>
+      </div>
+
+      <div class="tpl-opt" id="optC" onclick="selTpl('C')">
+        <div class="trad"><div class="trdot"></div></div>
+        <div><div class="tname">自訂架構</div><div class="tdesc">自行輸入章節架構內容</div></div>
+      </div>
+    </div>
+
+    <div class="cust-area" id="custArea">
+      <div class="secdiv"><div class="sdline"></div><div class="sdtext">請輸入自訂架構</div><div class="sdline"></div></div>
+      <textarea id="custStruct" class="xl" placeholder="壹、會議目的&#10;貳、討論事項&#10;一、[議題]&#10;（一）[內容]&#10;參、決議事項&#10;肆、追蹤事項" maxlength="1000" oninput="cnt('custStruct','csC',1000)"></textarea>
+      <div class="ctr" id="csC">0 / 1000</div>
+    </div>
+  </div>
+
+</div>
+
+<div class="submit-bar">
+  <div class="shint" id="shint">請先上傳逐字稿或貼上文字</div>
+  <button class="sbtn" id="sbtn" onclick="doSubmit()" disabled>🚀 送出並產製會議記錄</button>
+</div>
+
+<script>
+const N8N_URL='https://your-n8n-domain.com/webhook/form-transcript';
+const LIFF_ID='YOUR_LIFF_ID_TRANSCRIPT';
+let userId='',userProfile={},selectedFile=null,activeTab='file',selTplId=null;
+
+const STRUCTS={
+  A:`壹、會議目的\n（簡述本次月會目標，通常包含：說明專案進度、案例分享、討論採購或提案方向等）\n\n貳、全行AI提案總覽\n（說明目前全行AI提案總數、各狀態案數、預估節省FTE，以及本月新增案件）\n\n參、AI需求共創專案執行情況\n一、進行中專案數量與座談會場次統計\n二、各專案狀態摘要（逐項列出）\n\n肆、案例分享（若有）\n一、[案例名稱]\n（一）說明\n（二）支援開發單位\n\n伍、討論及決議事項\n一、[議題]\n（一）決議內容\n\n陸、追蹤事項\n一、[追蹤事項]\n二、下次會議時間`,
+  B:`壹、會議目的\n（一段話說明本場座談的核心目標：通常為釐清需求、討論流程、對焦分工等）\n\n貳、討論事項\n\n一、現行業務流程\n（一）[流程描述]\n（二）[作業痛點]\n\n二、解決方案討論\n（一）[技術方案或AI應用說明]\n（二）[架構或流程規劃]\n\n三、其他議題（若有，如：資安確認、費用估算、角色分工等）\n\n參、決議事項\n一、[決議項目]\n（一）[決議內容]\n\n肆、追蹤事項\n一、[追蹤項目]（負責單位/人員：XXX，預計完成時間：XX/XX）`
+};
+const HFMT={A:'text_block',B:'table'};
+
+async function initLiff(){
+  try{
+    await liff.init({liffId:LIFF_ID});
+    if(!liff.isLoggedIn()){liff.login();return;}
+    const p=await liff.getProfile();
+    userId=p.userId;userProfile=p;
+    const av=document.getElementById('uav');
+    if(p.pictureUrl)av.innerHTML=`<img src="${p.pictureUrl}" alt="">`;
+    else av.textContent=p.displayName.slice(0,2);
+    document.getElementById('uname').textContent=p.displayName;
+    fetchUserInfo(userId);
+  }catch(e){document.getElementById('uname').textContent='載入失敗';}
+}
+async function fetchUserInfo(uid){
+  try{
+    const r=await fetch(`${N8N_URL.replace('form-transcript','user-info')}?userId=${uid}`);
+    const d=await r.json();
+    if(d&&d.name){document.getElementById('uname').textContent=d.name;document.getElementById('umeta').textContent=`${d.unit}｜員編 ${d.empId}`;}
+    else document.getElementById('umeta').textContent=userProfile.displayName||'';
+  }catch(e){document.getElementById('umeta').textContent=userProfile.displayName||'';}
+}
+
+function switchTab(t){
+  activeTab=t;
+  document.getElementById('tab-file').classList.toggle('on',t==='file');
+  document.getElementById('tab-text').classList.toggle('on',t==='text');
+  document.getElementById('panel-file').classList.toggle('hidden',t!=='file');
+  document.getElementById('panel-text').classList.toggle('hidden',t!=='text');
+  checkReady();
+}
+
+document.getElementById('tsFile').addEventListener('change',e=>{const f=e.target.files[0];if(f)setFile(f);});
+function setFile(f){
+  selectedFile=f;
+  document.getElementById('upZone').classList.add('has-file');
+  document.getElementById('finfo').style.display='flex';
+  document.getElementById('fname').textContent=f.name;
+  document.getElementById('fsize').textContent=fmtB(f.size);
+  checkReady();
+}
+function removeFile(){
+  selectedFile=null;document.getElementById('tsFile').value='';
+  document.getElementById('upZone').classList.remove('has-file');
+  document.getElementById('finfo').style.display='none';checkReady();
+}
+function clearText(){document.getElementById('tsText').value='';updateWC();checkReady();}
+function updateWC(){
+  const t=document.getElementById('tsText').value;
+  const c=t.replace(/\s+/g,'').length;
+  document.getElementById('wc').textContent=c.toLocaleString();
+  document.getElementById('wcEst').textContent=c>0?`約 ${Math.ceil(c/300)} 分鐘錄音對應`:'';
+  checkReady();
+}
+
+function selTpl(t){
+  selTplId=t;
+  ['A','B','C'].forEach(x=>{
+    const o=document.getElementById('opt'+x);
+    o.classList.remove('sel-ab','sel-c');
+    if(x===t)o.classList.add(t==='C'?'sel-c':'sel-ab');
+  });
+  ['A','B'].forEach(x=>document.getElementById('prev'+x).classList.toggle('open',t===x));
+  document.getElementById('custArea').classList.toggle('open',t==='C');
+}
+
+function cnt(id,cid,max){
+  const l=document.getElementById(id).value.length;
+  const el=document.getElementById(cid);
+  el.textContent=`${l} / ${max}`;el.classList.toggle('warn',l>max*.9);
+}
+function checkReady(){
+  const fOk=activeTab==='file'&&selectedFile;
+  const tOk=activeTab==='text'&&document.getElementById('tsText').value.trim().length>10;
+  const ok=fOk||tOk;
+  document.getElementById('sbtn').disabled=!ok;
+  document.getElementById('shint').textContent=ok?'準備就緒，點擊送出後請稍候收信':'請先上傳逐字稿或貼上文字';
+}
+function getStructure(){
+  if(!selTplId)return'';
+  if(selTplId==='C')return document.getElementById('custStruct').value;
+  return STRUCTS[selTplId];
+}
+
+async function doSubmit(){
+  document.getElementById('overlay').classList.add('show');
+  try{
+    const fd=new FormData();
+    fd.append('userId',userId);fd.append('displayName',userProfile.displayName||'');
+    fd.append('meetingName',document.getElementById('meetingName').value);
+    fd.append('meetingDate',document.getElementById('meetingDate').value);
+    fd.append('meetingLocation',document.getElementById('meetingLocation').value);
+    fd.append('background',document.getElementById('background').value);
+    fd.append('attendees',document.getElementById('attendees').value);
+    fd.append('structure',getStructure());
+    fd.append('structureTemplate',selTplId||'none');
+    fd.append('headerFormat',selTplId&&HFMT[selTplId]?HFMT[selTplId]:'text_block');
+    fd.append('inputType','transcript');
+    fd.append('inputMethod',activeTab);
+    if(activeTab==='file'&&selectedFile)fd.append('transcriptFile',selectedFile);
+    else fd.append('transcriptText',document.getElementById('tsText').value);
+    const r=await fetch(N8N_URL,{method:'POST',body:fd});
+    document.getElementById('overlay').classList.remove('show');
+    if(r.ok){toast('✓ 已送出！請稍後收信','success');setTimeout(()=>{if(liff.isInClient())liff.closeWindow();},2000);}
+    else throw new Error(r.status);
+  }catch(e){document.getElementById('overlay').classList.remove('show');toast('送出失敗，請稍後再試','error');}
+}
+
+function toast(msg,type){const t=document.getElementById('toast');t.textContent=msg;t.className=`toast ${type} show`;setTimeout(()=>t.classList.remove('show'),3000);}
+function fmtB(b){return b<1024*1024?(b/1024).toFixed(1)+' KB':(b/(1024*1024)).toFixed(1)+' MB';}
+
+const zone=document.getElementById('upZone');
+zone.addEventListener('dragover',e=>{e.preventDefault();zone.classList.add('drag-over');});
+zone.addEventListener('dragleave',()=>zone.classList.remove('drag-over'));
+zone.addEventListener('drop',e=>{e.preventDefault();zone.classList.remove('drag-over');const f=e.dataTransfer.files[0];if(f)setFile(f);});
+
+document.getElementById('meetingDate').value=new Date().toISOString().split('T')[0];
+window.addEventListener('DOMContentLoaded',initLiff);
+</script>
+</body>
+</html>
