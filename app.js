@@ -1,4 +1,4 @@
-  const LIFF_ID = "你的_LIFF_ID";
+const LIFF_ID = "你的_LIFF_ID";
 const N8N_WEBHOOK_URL = "https://你的-n8n-網域/webhook/meeting-form-submit";
 
 async function initApp() {
